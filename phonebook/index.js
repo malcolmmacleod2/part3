@@ -93,6 +93,26 @@ let persons = [
     const body = request.body
     console.log(body)
 
+    if (!body.name) {
+      return response.status(400).json({ 
+        error: 'name missing' 
+      })
+    }
+
+    if (!body.number) {
+      return response.status(400).json({ 
+        error: 'number missing' 
+      })
+    }
+
+    const found = persons.find(p => p.name === body.name)
+
+    if (found) {
+      return response.status(400).json({ 
+        error: 'name exists' 
+      })
+    } 
+
     const person = {
       name: body.name,
       number: body.number,
