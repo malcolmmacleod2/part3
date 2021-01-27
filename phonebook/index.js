@@ -2,8 +2,11 @@ const express = require('express')
 const app = express()
 const morgan = require('morgan')
 
-app.use(express.json());
-app.use(morgan("tiny"))
+app.use(express.json())
+
+app.use(morgan('tiny'))
+
+morgan.token('body', (req, res) => JSON.stringify(req.body))
 
 let persons = [
     {
@@ -92,6 +95,7 @@ let persons = [
   }
 
   app.post('/api/persons', (request, response) => {
+
     const body = request.body
     console.log(body)
 
