@@ -23,7 +23,7 @@ const findPhonebookEntries = () => {
   PhoneBook
   .find({})
   .then(entries=> {
-    entries.forEach(entry => console.log(entry))
+    entries.forEach(entry => console.log(`${entry.name} ${entry.number}`))
     mongoose.connection.close()
   })
 }
