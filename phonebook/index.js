@@ -1,7 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
+const mongoose = require('mongoose')
+const PhoneBook = require('./models/phoneBook')
+
 
 app.use(express.json())
 app.use(cors())
@@ -30,7 +34,10 @@ let persons = [
   ]
 
   app.get('/api/persons', (request, response) => {
+
+    PhoneBook.find({}).then(persons => {
       response.json(persons)
+    })
   })
 
   app.get('/info', (request, response) => {
@@ -42,13 +49,13 @@ let persons = [
 
   app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
-    const person = persons.find(p => p.id === id)
-
-    if (person) {
-      response.json(person)
-    } else {
-      response.status(404).end()
-    }  
+    PhoneBook.find({_id: id}).then(persons => {
+      if (persons.length === 1) {
+        response.json(persons[0])
+      } else {
+        response.status(404).end()
+      }  
+    })
   })
 
   app.delete('/api/persons/:id', (request, response) => {
@@ -92,18 +99,19 @@ let persons = [
       })
     } 
 
-    const person = {
+    const phoneBook = new PhoneBook({
       name: body.name,
-      number: body.number,
-      id: generateId(),
-    }
+      number: body.number
+    })
 
-    persons = persons.concat(person)
+    phoneBook.save().then(result => {
+      console.log(`added ${result.name} number ${result.number} to the database!`)
+    })
 
-    response.json(person)
+    response.json(phoneBook)
   })
 
-  const PORT = process.env.PORT || 3001
+  const PORT = process.env.PORT
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
   })
