@@ -6,12 +6,22 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const PhoneBook = require('./models/phoneBook')
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(express.static('build'))
 app.use(express.json())
 app.use(cors())
 app.use(morgan('tiny'))
+app.use(errorHandler)
 
-app.use(express.static('build'))
 
 morgan.token('body', (req, res) => JSON.stringify(req.body))
 
@@ -58,16 +68,12 @@ let persons = [
     })
   })
 
-  app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(p => p.id === id)
-
-    if (person) {
-      persons = persons.filter(p => p.id !== id)
-      response.status(204).end()
-    } else {
-      response.status(404).end()
-    }  
+  app.delete('/api/persons/:id', (request, response, next) => {
+     PhoneBook.findByIdAndRemove(request.params.id)
+      .then(result => {
+        response.status(204).end()
+      })
+      .catch(error => next(error))
   })
 
   const generateId = () => {
