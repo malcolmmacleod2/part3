@@ -25,24 +25,6 @@ app.use(errorHandler)
 
 morgan.token('body', (req, res) => JSON.stringify(req.body))
 
-let persons = [
-    {
-      "name": "Ada Lovelace",
-      "number": "39-44-5323523",
-      "id": 2
-    },
-    {
-      "name": "Dan Abramov",
-      "number": "12-43-234345",
-      "id": 3
-    },
-    {
-      "name": "Mary Poppendieck",
-      "number": "39-23-6423122",
-      "id": 4
-    }
-  ]
-
   app.get('/api/persons', (request, response) => {
 
     PhoneBook.find({}).then(persons => {
@@ -50,22 +32,27 @@ let persons = [
     })
   })
 
-  app.get('/info', (request, response) => {
-    const count = persons.length
+  app.get('/info', (request, response, error) => {
+    let count = 0
     const time = new Date().toString()
 
-    response.send(`<p>Phonebook has info for ${count} people.</p><p>${time}</p>`)
+    PhoneBook.find({}).then(persons => {
+      count = persons.length
+      response.send(`<p>Phonebook has info for ${count} people.</p><p>${time}</p>`)
+    })
+    .catch(error => next(error))
   })
 
-  app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    PhoneBook.find({_id: id}).then(persons => {
-      if (persons.length === 1) {
-        response.json(persons[0])
-      } else {
-        response.status(404).end()
-      }  
-    })
+  app.get('/api/persons/:id', (request, response, next) => {
+    PhoneBook.findById(request.params.id)
+      .then(entry => {
+        if (entry) {
+          response.json(entry)
+        } else {
+          response.status(404).end()
+        }
+      })
+      .catch(error => next(error))
   })
 
   app.delete('/api/persons/:id', (request, response, next) => {
