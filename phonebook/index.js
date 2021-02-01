@@ -76,9 +76,19 @@ let persons = [
       .catch(error => next(error))
   })
 
-  const generateId = () => {
-    return Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER));
-  }
+  app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+
+    const entry = {
+      name: body.name,
+      number: body.number
+    }
+     PhoneBook.findByIdAndUpdate(request.params.id, entry, { new: true })
+      .then(updatedEntry => {
+        response.json(updatedEntry).end()
+      })
+      .catch(error => next(error))
+  })
 
   app.post('/api/persons', (request, response) => {
 
