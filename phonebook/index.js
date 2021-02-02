@@ -4,23 +4,16 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
 const PhoneBook = require('./models/phoneBook')
 
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
 
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } 
-
-  next(error)
-}
 
 app.use(express.static('build'))
 app.use(express.json())
 app.use(cors())
 app.use(morgan('tiny'))
-app.use(errorHandler)
+
 
 
 morgan.token('body', (req, res) => JSON.stringify(req.body))
@@ -77,7 +70,7 @@ morgan.token('body', (req, res) => JSON.stringify(req.body))
       .catch(error => next(error))
   })
 
-  app.post('/api/persons', (request, response) => {
+  app.post('/api/persons', (request, response, next) => {
 
     const body = request.body
     console.log(body)
@@ -94,14 +87,6 @@ morgan.token('body', (req, res) => JSON.stringify(req.body))
       })
     }
 
-    const found = persons.find(p => p.name === body.name)
-
-    if (found) {
-      return response.status(400).json({ 
-        error: 'name exists' 
-      })
-    } 
-
     const phoneBook = new PhoneBook({
       name: body.name,
       number: body.number
@@ -109,10 +94,32 @@ morgan.token('body', (req, res) => JSON.stringify(req.body))
 
     phoneBook.save().then(result => {
       console.log(`added ${result.name} number ${result.number} to the database!`)
+      response.json(result).end()
     })
-
-    response.json(phoneBook)
+    .catch(error => next(error))
   })
+
+  const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+  }
+
+  // handler of requests with unknown endpoint
+  app.use(unknownEndpoint)
+
+  const errorHandler = (error, request, response, next) => {
+    console.error(error.name)
+
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } 
+    else if (error.name === 'ValidationError') {
+      return response.status(400).send({ error: error.message })
+    }
+
+    next(error)
+  } 
+
+  app.use(errorHandler)
 
   const PORT = process.env.PORT
   app.listen(PORT, () => {
