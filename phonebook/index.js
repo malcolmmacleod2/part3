@@ -63,7 +63,7 @@ morgan.token('body', (req, res) => JSON.stringify(req.body))
       name: body.name,
       number: body.number
     }
-     PhoneBook.findByIdAndUpdate(request.params.id, entry, { new: true })
+     PhoneBook.findByIdAndUpdate(request.params.id, entry, { new: true, runValidators: true })
       .then(updatedEntry => {
         response.json(updatedEntry).end()
       })
